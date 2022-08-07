@@ -44,7 +44,7 @@ def launch_task(sepal_length, sepal_width, petal_length, petal_width, api):
     print(pred)
 
     if api == "v1.0":
-        res_dict = {"Done" : "API exists"}
+        res_dict = {'result':  json.loads(pd.DataFrame(pred).to_json(orient='records'))}
     else:
         res_dict = {"Error" : "API does not exists"}
 
