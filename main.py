@@ -1,17 +1,24 @@
 import os
 import sys
+
 from flask import Flask, jsonify, abort, make_response, request
 import json
 import requests
 import time
 import pandas as pd
+
 import logging
+#
+from rq import Queue, get_current_job
+from redis import Redis
 
 import model as Model
 
 ###
 # logging
 ###
+if not os.path.exists("logs"):
+    os.mkdir("logs")
 logging.basicConfig(filename="logs/logs.log", level=logging.DEBUG)
 
 
