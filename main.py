@@ -14,6 +14,14 @@ from redis import Redis
 
 import model as Model
 
+
+
+###
+# Queue
+###
+redis_conn = Redis(host="app-redis", port=6379)
+queue = Queue("rest_api", connection=redis_conn, default_timeout=1200)
+
 ###
 # logging
 ###
