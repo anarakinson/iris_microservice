@@ -5,3 +5,5 @@ sqlalchemy==1.4.39
 sklearn
 pandas
 requests
+rq
+redis

@@ -1,13 +1,26 @@
 import os
 import sys
+
 from flask import Flask, jsonify, abort, make_response, request
 import json
 import requests
 import time
 import pandas as pd
+
 import logging
 
+from rq import Queue, get_current_job
+from redis import Redis
+
 import model as Model
+
+
+###
+# Queue
+###
+redis_conn = Redis(host='app-redis', port=6379)
+queue = Queue('rest_api', connection=redis_conn, default_timeout=1200)
+
 
 ###
 # logging
