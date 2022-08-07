@@ -19,7 +19,7 @@ import model as Model
 ###
 # Queue
 ###
-redis_conn = Redis(host="app-redis", port=6379)
+redis_conn = Redis(host="127.0.0.1", port=6379)
 print(redis_conn)
 queue = Queue("rest_api", connection=redis_conn, default_timeout=1200)
 
@@ -104,53 +104,59 @@ def get_task():
         request.args.get("petal_width"),
         "v1.0",
         job_id,
-        result_ttl=60 * 60 * 24,
+        result_ttl=(60 * 60 * 24),
         job_id=job_id
     )
 
-    return get_job_response(job.get_id)
+    return get_job_response(job.get_id())
 
 
-    def get_process_response(code, process_status, status=200):
-        response = {
-            "code" : code,
-            "status" : process_status
-        }
-        return get_response(response, status)
+def get_process_response(code, process_status, status=200):
+    response = {
+        "CODE" : code,
+        "STATUS" : process_status
+    }
+    return get_response(response, status)
 
-    @app.route("/iris/api/status/<job_id>")
-    def get_status(job_id):
+@app.route("/iris/api/v1.0/status/<job_id>")
+def status(job_id):
 
-        job = queue.fetch_job(job_id)
+    job = queue.fetch_job(job_id)
 
-        if job is None:
-            return get_process_response("NOT_FOUND", "error", 404)
+    print(job)
+    print(job_id)
 
-        if job.is_failed:
-            return get_process_response("INTERNAL_SERVER_ERROR", "error", 500)
-
-        if job.is_finished:
-            return get_process_response("READY", "success")
-
-        return get_process_response("NOT_READY", "running", 202)
-
-
-    @app.route("/iris/api/result/<job_id>")
-    def get_result(job_id):
-
-        job = queue.fetch_job(job_id)
-
-        if job.is_failed:
-            return get_process_response("INTERNAL_SERVER_ERROR", "error", 500)
-
-        if job.is_finished:
-            job_result = copy.deepcopy(job.result)
-            result = {
-                "result" : job_result["result"]
-            }
-            return get_response(result)
-
+    if job is None:
         return get_process_response("NOT_FOUND", "error", 404)
+
+    if job.is_failed:
+        return get_process_response("INTERNAL_SERVER_ERROR", "error", 500)
+
+    if job.is_finished:
+        return get_process_response("READY", "success")
+
+    return get_process_response("NOT_READY", "running", 202)
+
+
+@app.route("/iris/api/v1.0/result/<job_id>")
+def result(job_id):
+    job = queue.fetch_job(job_id)
+
+    print(job)
+    print(job_id)
+
+    if job.is_failed:
+        return get_process_response("INTERNAL_SERVER_ERROR", "error", 500)
+
+    if job.is_finished:
+        job_result = copy.deepcopy(job.result)
+        result = {
+            "result": job_result["result"]
+        }
+
+        return get_response(result)
+
+    return get_process_response("NOT_FOUND", "error", 404)
 
 
 ###
