@@ -8,6 +8,8 @@
 
 Доступ к API должен осуществляться по следующему URL:
 `http://[hostname]/iris/api/v1.0/getpred`
+В качестве примера запроса можно использовать:
+`http://[hostname]/iris/api/v1.0/getpred?sepal_length=5.1&sepal_width=3.5&petal_length=1.4&petal_width=0.2`
 
 также должны присутствовать:
 `http://[hostname]/iris/api/v1.0/status/`

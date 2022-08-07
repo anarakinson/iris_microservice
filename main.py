@@ -8,6 +8,9 @@ import time
 import pandas as pd
 
 import logging
+#
+from rq import Queue, get_current_job
+from redis import Redis
 
 from rq import Queue, get_current_job
 from redis import Redis
@@ -25,6 +28,8 @@ queue = Queue('rest_api', connection=redis_conn, default_timeout=1200)
 ###
 # logging
 ###
+if not os.path.exists("logs"):
+    os.mkdir("logs")
 logging.basicConfig(filename="logs/logs.log", level=logging.DEBUG)
 
 
