@@ -5,24 +5,34 @@ import json
 import requests
 import time
 import pandas as pd
+import logging
 
 import model as Model
 
 ###
+# logging
+###
+logging.basicConfig(filename="logs/logs.log", level=logging.DEBUG)
+
+
+###
 # Application
+###
 app = Flask(__name__)
 
 
 ###
 # model
+###
 model = Model.load_model()
-# print(model)
 targets = ['setosa', 'versicolor', 'virginica']
 
 
 ###
 # model functions
+###
 def get_pred(sepal_length, sepal_width, petal_length, petal_width):
+
     columns = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
     data = [sepal_length, sepal_width, petal_length, petal_width]
     print(data)
@@ -32,6 +42,9 @@ def get_pred(sepal_length, sepal_width, petal_length, petal_width):
     pred_round = [f"{elem : .3f}" for elem in pred[0]]
     out = pd.concat([pd.Series(targets), pd.Series(pred_round)], axis=1)
     out.columns = ["class", "probability"]
+
+    logging.info(f'[PREDICTION] \n{out}')
+
     return out
 
 
@@ -53,6 +66,7 @@ def launch_task(sepal_length, sepal_width, petal_length, petal_width, api):
 
 ###
 # app functions
+###
 @app.route('/iris/api/v1.0/getpred', methods=["GET"])
 def get_task():
     result = launch_task(
@@ -68,15 +82,21 @@ def get_task():
 
 ###
 # errors
+###
 @app.errorhandler(404)
 def not_found(error):
+    logging.warning('[PAGE_NOT_FOUND]')
     return make_response(jsonify({"code" : "PAGE_NOT_FOUND"}), 404)
 
 @app.errorhandler(500)
 def server_error(error):
+    logging.warning('[INTERNAL_SERVER_ERROR]')
     return make_response(jsonify({"code" : "INTERNAL_SERVER_ERROR"}), 500)
 
 
 
 if __name__ == "__main__":
-    app.run(port=5050, debug=True)
+    try:
+        app.run(port=5050, debug=True)
+    except Exception as ex:
+        logging.debug(f'[APPLICATION_ERROR] {ex}')
