@@ -18,12 +18,12 @@
 
 `http://[hostname]/iris/api/v1.0/getpred?sepal_length=5.1&sepal_width=3.5&petal_length=1.4&petal_width=0.2`
 
-также должны присутствовать:
+После обращения API возвращает job_id, с помощью которого можно получить следующую информацию
 
-- для проверки статуса выполнения запроса к сервису
+- статус выполнения запроса к сервису по адресу:
 
-`http://[hostname]/iris/api/v1.0/status/`
+`http://[hostname]/iris/api/v1.0/status/<job_id>`
 
-- для получения результаты работы модели
+- результат работы модели по адресу:
 
-`http://[hostname]/iris/api/v1.0/result/`
+`http://[hostname]/iris/api/v1.0/result/<job_id>`
