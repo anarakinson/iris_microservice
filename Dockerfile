@@ -17,4 +17,4 @@ RUN pip install -r requirements.txt
 COPY . .
 # копирование остальных файлов
 
-RUN chmod -x /usr/src/app/start.sh
+RUN chmod +x /usr/src/app/start.sh
