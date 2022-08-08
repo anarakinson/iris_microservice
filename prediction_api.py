@@ -23,7 +23,7 @@ import model as Model
 ###
 redis_conn = Redis(host="127.0.0.1", port=6379)
 print(redis_conn)
-queue = Queue("rest_api", connection=redis_conn, default_timeout=1200)
+queue = Queue("prediction_api", connection=redis_conn, default_timeout=1200)
 
 
 ###
@@ -70,6 +70,7 @@ def get_pred(sepal_length, sepal_width, petal_length, petal_width):
 def launch_task(sepal_length, sepal_width, petal_length, petal_width, api, job_id):
 
     job = get_current_job()
+
     print(job)
     print()
     print(f"{sepal_length=}", f"{sepal_width=}", f"{petal_length=}", f"{petal_width=}", f"{api=}")
@@ -78,8 +79,10 @@ def launch_task(sepal_length, sepal_width, petal_length, petal_width, api, job_i
     print(pred)
 
     if api == "v1.0":
+        logging.info('[LAUNCH TASK]')
         res_dict = {'result':  json.loads(pd.DataFrame(pred).to_json(orient='records'))}
     else:
+        logging.warning('[API DOES NOT EXISTS]')
         res_dict = {"Error" : "API does not exists"}
 
     return res_dict
@@ -96,17 +99,10 @@ def get_job_response(job_id):
 @app.route('/iris/api/v1.0/getpred', methods=["GET"])
 def get_task():
 
-    registry = queue.failed_job_registry
-    print(registry)
-    # This is how to get jobs from FailedJobRegistry
-    for job_id in registry.get_job_ids():
-        print("failed", job_id)
-        registry.requeue(job_id)
-
     job_id = request.args.get("job_id")
 
     job = queue.enqueue(
-        "rest_api.launch_task",
+        "prediction_api.launch_task",
         request.args.get("sepal_length"),
         request.args.get("sepal_width"),
         request.args.get("petal_length"),
@@ -117,7 +113,8 @@ def get_task():
         job_id=job_id,
         job_timeout=600,
     )
-    print(job_id, job.get_id(), job.id)
+
+    print(job.id)
     return get_job_response(job.get_id())
 
 
@@ -133,11 +130,6 @@ def status(job_id):
 
     job = queue.fetch_job(job_id)
     # job = Job.fetch(job_id, connection=redis_conn)
-
-    print(job)
-    if job is not None:
-        print(job.get_status())
-    print(job_id)
 
     if job is None:
         return get_process_response("NOT_FOUND", "error", 404)
@@ -156,11 +148,6 @@ def result(job_id):
 
     job = queue.fetch_job(job_id)
     # job = Job.fetch(job_id, connection=redis_conn)
-
-    print(job)
-    if job is not None:
-        print(job.get_status())
-    print(job_id)
 
     if job is None:
         return get_process_response("NOT_FOUND", "error", 404)
