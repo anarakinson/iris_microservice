@@ -5,11 +5,13 @@ from flask import Flask, jsonify, abort, make_response, request
 import json
 import requests
 import time
+import copy
 import pandas as pd
 
 import logging
 #
 from rq import Queue, get_current_job
+from rq.job import Job
 from redis import Redis
 
 import model as Model
@@ -68,7 +70,7 @@ def get_pred(sepal_length, sepal_width, petal_length, petal_width):
 def launch_task(sepal_length, sepal_width, petal_length, petal_width, api, job_id):
 
     job = get_current_job()
-
+    print(job)
     print()
     print(f"{sepal_length=}", f"{sepal_width=}", f"{petal_length=}", f"{petal_width=}", f"{api=}")
 
@@ -94,6 +96,13 @@ def get_job_response(job_id):
 @app.route('/iris/api/v1.0/getpred', methods=["GET"])
 def get_task():
 
+    registry = queue.failed_job_registry
+    print(registry)
+    # This is how to get jobs from FailedJobRegistry
+    for job_id in registry.get_job_ids():
+        print("failed", job_id)
+        registry.requeue(job_id)
+
     job_id = request.args.get("job_id")
 
     job = queue.enqueue(
@@ -105,9 +114,10 @@ def get_task():
         "v1.0",
         job_id,
         result_ttl=(60 * 60 * 24),
-        job_id=job_id
+        job_id=job_id,
+        job_timeout=600,
     )
-
+    print(job_id, job.get_id(), job.id)
     return get_job_response(job.get_id())
 
 
@@ -122,8 +132,11 @@ def get_process_response(code, process_status, status=200):
 def status(job_id):
 
     job = queue.fetch_job(job_id)
+    # job = Job.fetch(job_id, connection=redis_conn)
 
     print(job)
+    if job is not None:
+        print(job.get_status())
     print(job_id)
 
     if job is None:
@@ -140,10 +153,17 @@ def status(job_id):
 
 @app.route("/iris/api/v1.0/result/<job_id>")
 def result(job_id):
+
     job = queue.fetch_job(job_id)
+    # job = Job.fetch(job_id, connection=redis_conn)
 
     print(job)
+    if job is not None:
+        print(job.get_status())
     print(job_id)
+
+    if job is None:
+        return get_process_response("NOT_FOUND", "error", 404)
 
     if job.is_failed:
         return get_process_response("INTERNAL_SERVER_ERROR", "error", 500)
