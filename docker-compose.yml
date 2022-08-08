@@ -10,3 +10,7 @@ services:
     extra_hosts:
         - "app-redis:127.0.0.1"  # сопоставления имен хостов для работы с Redis
     command: /usr/src/app/start.sh  # запуск файлa start.sh
+  # redis:
+  #   image: redis:6-alpine
+  #   ports:
+  #     - "6379:6379"

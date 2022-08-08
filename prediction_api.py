@@ -22,7 +22,6 @@ import model as Model
 # Queue
 ###
 redis_conn = Redis(host="127.0.0.1", port=6379)
-print(redis_conn)
 queue = Queue("prediction_api", connection=redis_conn, default_timeout=1200)
 
 
@@ -71,12 +70,12 @@ def launch_task(sepal_length, sepal_width, petal_length, petal_width, api, job_i
 
     job = get_current_job()
 
-    print(job)
-    print()
-    print(f"{sepal_length=}", f"{sepal_width=}", f"{petal_length=}", f"{petal_width=}", f"{api=}")
+    # print(job)
+    # print()
+    # print(f"{sepal_length=}", f"{sepal_width=}", f"{petal_length=}", f"{petal_width=}", f"{api=}")
 
     pred = get_pred(sepal_length, sepal_width, petal_length, petal_width)
-    print(pred)
+    # print(pred)
 
     if api == "v1.0":
         logging.info('[LAUNCH TASK]')
@@ -114,7 +113,7 @@ def get_task():
         job_timeout=600,
     )
 
-    print(job.id)
+    # print(job.id)
     return get_job_response(job.get_id())
 
 
