@@ -1,8 +1,6 @@
-version: "3.1"
-
 services:
     prediction_app:
-        image: iris_restapi
+        build: .
         restart: always
         ports:
             - 5005:5000
