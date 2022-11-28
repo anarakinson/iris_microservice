@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 # установка рабочей директории
 WORKDIR /usr/src/app

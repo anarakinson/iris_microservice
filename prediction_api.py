@@ -17,7 +17,6 @@ from redis import Redis
 import model as Model
 
 
-
 ###
 # Queue
 ###
@@ -43,39 +42,19 @@ app = Flask(__name__)
 # model
 ###
 model = Model.load_model()
-targets = ['setosa', 'versicolor', 'virginica']
+targets = Model.TARGETS
 
 
 ###
-# functions
+# queue function
 ###
-def get_pred(sepal_length, sepal_width, petal_length, petal_width):
-
-    columns = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
-    data = [sepal_length, sepal_width, petal_length, petal_width]
-    print(data)
-    df = pd.DataFrame([data], columns=columns)
-    df = df.astype("float")
-    pred = model.predict_proba(df)
-    pred_round = [f"{elem : .3f}" for elem in pred[0]]
-    out = pd.concat([pd.Series(targets), pd.Series(pred_round)], axis=1)
-    out.columns = ["class", "probability"]
-
-    logging.info(f'[PREDICTION] \n{out}')
-
-    return out
-
-
-def launch_task(sepal_length, sepal_width, petal_length, petal_width, api, job_id):
-
+def launch_task(data, api, job_id):
+    '''
+    Function to put prediction task to queue
+    '''
     job = get_current_job()
 
-    # print(job)
-    # print()
-    # print(f"{sepal_length=}", f"{sepal_width=}", f"{petal_length=}", f"{petal_width=}", f"{api=}")
-
-    pred = get_pred(sepal_length, sepal_width, petal_length, petal_width)
-    # print(pred)
+    pred = Model.get_pred(model, data)
 
     if api == "v1.0":
         logging.info('[LAUNCH TASK]')
@@ -97,15 +76,21 @@ def get_job_response(job_id):
 ###
 @app.route('/iris/api/v1.0/getpred', methods=["GET"])
 def get_task():
-
+    '''
+    Function to parse request and create task in queue
+    '''
     job_id = request.args.get("job_id")
+
+    data = {
+        "sepal_length" : request.args.get("sepal_length"),
+        "sepal_width" : request.args.get("sepal_width"),
+        "petal_length" : request.args.get("petal_length"),
+        "petal_width" : request.args.get("petal_width"),
+    }
 
     job = queue.enqueue(
         "prediction_api.launch_task",
-        request.args.get("sepal_length"),
-        request.args.get("sepal_width"),
-        request.args.get("petal_length"),
-        request.args.get("petal_width"),
+        data,
         "v1.0",
         job_id,
         result_ttl=(60 * 60 * 24),
@@ -113,7 +98,6 @@ def get_task():
         job_timeout=600,
     )
 
-    # print(job.id)
     return get_job_response(job.get_id())
 
 
@@ -126,9 +110,10 @@ def get_process_response(code, process_status, status=200):
 
 @app.route("/iris/api/v1.0/status/<job_id>")
 def status(job_id):
-
+    '''
+    Function returns status of task
+    '''
     job = queue.fetch_job(job_id)
-    # job = Job.fetch(job_id, connection=redis_conn)
 
     if job is None:
         return get_process_response("NOT_FOUND", "error", 404)
@@ -144,9 +129,10 @@ def status(job_id):
 
 @app.route("/iris/api/v1.0/result/<job_id>")
 def result(job_id):
-
+    '''
+    Function to get result of model prediction from queue
+    '''
     job = queue.fetch_job(job_id)
-    # job = Job.fetch(job_id, connection=redis_conn)
 
     if job is None:
         return get_process_response("NOT_FOUND", "error", 404)
@@ -184,4 +170,4 @@ if __name__ == "__main__":
     try:
         app.run(host="0.0.0.0", port=5000, debug=True)
     except Exception as ex:
-        logging.debug(f'[APPLICATION_ERROR] {ex}')
+        logging.debug(f'[APPLICATION_ERROR]: {ex}')

@@ -15,20 +15,20 @@
 
 `docker-compose up`
 
-Доступ к API должен осуществляться по следующему URL:
+Доступ к API должен осуществляться по следующему URL (по умолчанию установлен порт 5005):
 
-`http://[hostname]/iris/api/v1.0/getpred`
+`http://[host]:[port]/iris/api/v1.0/getpred`
 
 В качестве примера запроса можно использовать:
 
-`http://[hostname]/iris/api/v1.0/getpred?sepal_length=5.1&sepal_width=3.5&petal_length=1.4&petal_width=0.2`
+`http://127.0.0.1:5005/iris/api/v1.0/getpred?sepal_length=5.1&sepal_width=3.5&petal_length=1.4&petal_width=0.2`
 
 После обращения API возвращает job_id, с помощью которого можно получить следующую информацию
 
 - статус выполнения запроса к сервису по адресу:
 
-`http://[hostname]/iris/api/v1.0/status/<job_id>`
+`http://[host]:[port]/iris/api/v1.0/status/<job_id>`
 
 - результат работы модели по адресу:
 
-`http://[hostname]/iris/api/v1.0/result/<job_id>`
+`http://[host]:[port]/iris/api/v1.0/result/<job_id>`
